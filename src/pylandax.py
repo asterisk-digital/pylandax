@@ -21,20 +21,25 @@ class Client:
         :param version: The version of the API to use, defaults to v20
         :return: A new pylandax client
         """
-        self.required_credentials = [
+
+        self.script_dir = Path(__file__).parent.absolute()
+
+        self.logger = logging.getLogger(__name__)
+
+        required_credentials = [
             'username', 'password',
             'client_id', 'client_secret'
         ]
 
-        self.script_dir = Path(__file__).parent.absolute()
-
-        for key, value in credentials.items():
-            setattr(self, key, value)
-
-        for attr in self.required_credentials:
-            if not hasattr(self, attr):
-                print(f'Error: credential field is required: {attr}')
+        for key in required_credentials:
+            if key not in credentials:
+                self.logger.error(f'Error: credential field is required: {key}')
                 return
+
+        self.username = credentials['username']
+        self.password = credentials['password']
+        self.client_id = credentials['client_id']
+        self.client_secret = credentials['client_secret']
 
         self.base_url = f'https://{url}/'
         self.api_url = f'{self.base_url}api/{version}/'
@@ -208,11 +213,18 @@ To upload a document linked to an object in a module, use pylandax.upload_linked
         response = self.documents_createdocument(filedata, filename, document_options)
         return response
 
+    def get_linked_documents(self, model: str, id_: int):
+        url_fragment = f'{model}({id_})/Documents'
+
+        linked_documents = self.get_all_data(url_fragment)
+
+        return linked_documents
+
     def upload_linked_document(
             self,
             filedata: io.BytesIO, filename: str, folder_id: int,
             module_name: str, linked_object_id: int,
-            document_options: dict = None) -> requests.Response:
+            document_options: dict = None) -> requests.Response | None:
         """
         Upload a document to to Landax linked to another object via a module.
         :param filedata: io.BytesIO object to upload of the document
@@ -270,7 +282,8 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
 
         return upload_response
 
-    def create_document(self, filedata: io.BytesIO, filename: str, document_object: dict, document_link: dict = None):
+    def documents_createdocument(
+            self, filedata: io.BytesIO, filename: str, document_object: dict, document_link: dict = None):
         """
         Create a document in Landax
         :param filename: The filename of the document
@@ -294,7 +307,7 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
     def get_document_content(self, document_id: int):
         """
         Retrieves the content of a document with the specified document ID.
-        :param document_id (int): the id of the document to retrieve
+        :param document_id: the id of the document to retrieve
         :return: The response object containing the content of the document.
         """
         initial_url = self.api_url + f'Documents/GetContent?documentid={document_id}&original=True&encode=raw'
@@ -304,19 +317,19 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
         return response
 
     def push_document_content(self, document_data: io.BytesIO, document_id: int):
-            """
-            Pushes the content of a document with the specified document ID.
-            :param document_data (io.BytesIO): The content of the document as a BytesIO object.
-            :param document_id (int): The ID of the document.
-            :return: The response object containing the result of the request.
-            """
-            doc_id = str(document_id)
-            url = self.api_url + f'Documents/PushContent?documentid={doc_id}'
+        """
+        Pushes the content of a document with the specified document ID.
+        :param document_data: The content of the document as a BytesIO object.
+        :param document_id: The ID of the document.
+        :return: The response object containing the result of the request.
+        """
+        doc_id = str(document_id)
+        url = self.api_url + f'Documents/PushContent?documentid={doc_id}'
 
-            data = document_data.read()
+        data = document_data.read()
 
-            response = requests.post(url, data=data, headers=self.headers)
-            return response
+        response = requests.post(url, data=data, headers=self.headers)
+        return response
 
     def custom_request(self, partial_url, method='GET', data=None) -> requests.Response:
         """
