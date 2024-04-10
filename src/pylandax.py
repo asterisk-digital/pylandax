@@ -212,7 +212,7 @@ To upload a document linked to an object in a module, use pylandax.upload_linked
             self,
             filedata: io.BytesIO, filename: str, folder_id: int,
             module_name: str, linked_object_id: int,
-            document_options: dict = None) -> requests.Response:
+            document_options: dict = None) -> requests.Response | None:
         """
         Upload a document to to Landax linked to another object via a module.
         :param filedata: io.BytesIO object to upload of the document
