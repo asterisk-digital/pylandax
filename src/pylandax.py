@@ -270,7 +270,7 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
 
         return upload_response
 
-    def create_document(self, filedata: io.BytesIO, filename: str, document_object: dict, document_link: dict = None):
+    def documents_createdocument(self, filedata: io.BytesIO, filename: str, document_object: dict, document_link: dict = None):
         """
         Create a document in Landax
         :param filename: The filename of the document
