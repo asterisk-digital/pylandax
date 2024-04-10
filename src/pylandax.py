@@ -21,20 +21,25 @@ class Client:
         :param version: The version of the API to use, defaults to v20
         :return: A new pylandax client
         """
-        self.required_credentials = [
+
+        self.script_dir = Path(__file__).parent.absolute()
+
+        self.logger = logging.getLogger(__name__)
+
+        required_credentials = [
             'username', 'password',
             'client_id', 'client_secret'
         ]
 
-        self.script_dir = Path(__file__).parent.absolute()
-
-        for key, value in credentials.items():
-            setattr(self, key, value)
-
-        for attr in self.required_credentials:
-            if not hasattr(self, attr):
-                print(f'Error: credential field is required: {attr}')
+        for key in required_credentials:
+            if key not in credentials:
+                self.logger.error(f'Error: credential field is required: {key}')
                 return
+
+        self.username = credentials['username']
+        self.password = credentials['password']
+        self.client_id = credentials['client_id']
+        self.client_secret = credentials['client_secret']
 
         self.base_url = f'https://{url}/'
         self.api_url = f'{self.base_url}api/{version}/'
