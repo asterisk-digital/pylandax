@@ -1,0 +1,5 @@
+LANDAX_URL=intrixtest.landax.no
+LANDAX_USERNAME={{ op://Development/intrixtest.landax.no/username }}
+LANDAX_PASSWORD={{ op://Development/intrixtest.landax.no/password }}
+LANDAX_CLIENT_ID={{ op://Development/intrixtest.landax.no/client_id }}
+LANDAX_CLIENT_SECRET={{ op://Development/intrixtest.landax.no/client_secret }}
