@@ -214,11 +214,11 @@ To upload a document linked to an object in a module, use pylandax.upload_linked
         return response
 
     def get_linked_documents(self, model: str, id_: int):
-        url = self.api_url + f'{model}({id_})/Documents'
+        url_fragment = f'{model}({id_})/Documents'
 
-        response = requests.get(url, headers=self.headers)
+        linked_documents = self.get_all_data(url_fragment)
 
-        return response
+        return linked_documents
 
     def upload_linked_document(
             self,
