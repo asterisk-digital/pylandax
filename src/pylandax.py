@@ -162,6 +162,19 @@ class Client:
         params = {'$filter': f'FolderId eq {folder_id}'}
         return self.get_all_data('Documents', params)
 
+    def get_model_documents(self, model: str, id_: int):
+        """
+        Gets a list of documents linked to the given model and id
+        :param model: The model to get documents from
+        :param id_: The id of the model to get documents from
+        :return: A list of dictionaries, each dictionary representing a document
+        """
+        url_fragment = f'{model}({id_})/Documents'
+
+        model_documents = self.get_all_data(url_fragment)
+
+        return model_documents
+
     def upload_document_from_file(self, file: Path, document_object: {} = None):
         """
         Helper function to upload a file to Landax by using a pathlib.Path object.
