@@ -1,4 +1,5 @@
 import os
+import io
 import sys
 from pathlib import Path
 
@@ -26,9 +27,18 @@ def main():
     }
     client = pylandax.Client(conf['url'], conf['credentials'])
 
-    linked_documents = client.get_linked_documents('INCIDENTS', 36)
+    incident_id = 40
 
-    print(linked_documents)
+    image_filename = 'testbilde2.jpg'
+    with open(script_dir / image_filename, 'rb') as file:
+        # Read image to io.BytesIO object
+        image_data = io.BytesIO(file.read())
+
+    response = client.upload_linked_document(
+        filedata=image_data, filename=image_filename, folder_id=None,
+        module_name='INCIDENTS', linked_object_id=incident_id)
+
+    print(response)
 
 
 if __name__ == '__main__':
