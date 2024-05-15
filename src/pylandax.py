@@ -279,8 +279,9 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
         # Should be updated as needed
         # TODO: We can deduce this from the module metadata, just do lowercase, first letter uppercase then add Id
         id_key_mapping = {
+            6: 'IncidentId',
             10: 'CoworkerId',
-            24: 'EquipmentId'
+            24: 'EquipmentId',
         }
 
         if module_id not in id_key_mapping:
