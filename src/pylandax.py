@@ -277,7 +277,6 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
 
         # This mapping maps the module id to the corresponding field name in the DocumentLink object
         # Should be updated as needed
-        # TODO: We can deduce this from the module metadata, just do lowercase, first letter uppercase then add Id
         id_key_mapping = {
             6: 'IncidentId',
             10: 'CoworkerId',
