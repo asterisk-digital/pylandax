@@ -296,7 +296,7 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
         }
 
         if folder_id is not None:
-            document_options['FolderId'] = folder_id
+            document_link['FolderId'] = folder_id
 
         upload_response = self.documents_createdocument(filedata, filename, document_options, document_link)
         if upload_response.status_code != 200:
