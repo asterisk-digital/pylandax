@@ -241,7 +241,7 @@ To upload a document linked to an object in a module, use pylandax.upload_linked
 
     def upload_linked_document(
             self,
-            filedata: io.BytesIO, filename: str, folder_id: int,
+            filedata: io.BytesIO, filename: str, folder_id: int | None,
             module_name: str, linked_object_id: int,
             document_options: dict = None) -> requests.Response | None:
         """
@@ -292,9 +292,11 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
         document_options['ModuleId'] = module_id
 
         document_link = {
-            'FolderId': folder_id,
             object_id_key: linked_object_id
         }
+
+        if folder_id is not None:
+            document_options['FolderId'] = folder_id
 
         upload_response = self.documents_createdocument(filedata, filename, document_options, document_link)
         if upload_response.status_code != 200:
