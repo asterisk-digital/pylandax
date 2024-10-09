@@ -12,6 +12,10 @@ class LandaxAuthException(Exception):
     pass
 
 
+class LandaxDataException(Exception):
+    pass
+
+
 class Client:
     def __init__(self, url: str, credentials: dict, version='v20'):
         """
@@ -326,15 +330,29 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
         response = requests.post(url, files=files, headers=self.headers)
         return response
 
-    def get_document_content(self, document_id: int) -> bytes:
+    def get_document_content(self, document_id: int, as_pdf=False) -> bytes:
         """
         Retrieves the content of a document with the specified document ID.
         :param document_id: the id of the document to retrieve
+        :param as_pdf: whether to retrieve the document as a PDF
+        :raises LandaxDataException: if the request to Landax fails
         :return: The document content as bytes
         """
-        initial_url = self.api_url + f'Documents/GetContent?documentid={document_id}&original=True&encode=raw'
+
+        if as_pdf:
+            # If original=False, the document runs output processing and is turned into a pdf
+            original_arg = 'False'
+        else:
+            # If original=True, the document skips output processing and is returned as is
+            original_arg = 'True'
+
+        # encode=raw returns the document as a byte stream
+        initial_url = self.api_url + f'Documents/GetContent?documentid={document_id}&original={original_arg}&encode=raw'
 
         response = requests.get(initial_url, headers=self.headers)
+
+        if response.status_code != 200:
+            raise LandaxDataException(f'Error getting document content: {response.text}')
 
         return response.content
 
