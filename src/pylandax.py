@@ -3,6 +3,7 @@ import json
 import copy
 import io
 import logging
+from io import BytesIO
 
 import requests
 import urllib
@@ -330,13 +331,13 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
         response = requests.post(url, files=files, headers=self.headers)
         return response
 
-    def get_document_content(self, document_id: int, as_pdf=False) -> bytes:
+    def get_document_content(self, document_id: int, as_pdf=False) -> BytesIO:
         """
         Retrieves the content of a document with the specified document ID.
         :param document_id: the id of the document to retrieve
         :param as_pdf: whether to retrieve the document as a PDF
         :raises LandaxDataException: if the request to Landax fails
-        :return: The document content as bytes
+        :return: The document content as a BytesIO buffer
         """
 
         if as_pdf:
@@ -354,7 +355,7 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
         if response.status_code != 200:
             raise LandaxDataException(f'Error getting document content: {response.text}')
 
-        return response.content
+        return BytesIO(response.content)
 
     def push_document_content(self, document_data: io.BytesIO, document_id: int):
         """
