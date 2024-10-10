@@ -348,12 +348,17 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
             original_arg = 'True'
 
         # encode=raw returns the document as a byte stream
-        initial_url = self.api_url + f'Documents/GetContent?documentid={document_id}&original={original_arg}&encode=raw'
+        url = self.api_url + f'Documents/GetContent?documentid={document_id}&original={original_arg}&encode=raw'
 
-        response = requests.get(initial_url, headers=self.headers)
+        response = requests.get(url, headers=self.headers)
 
+        # TODO: If we request the document as pdf, we can receive a 202, which means it can't return
+        # the content right now because the pdf export is still processing, but will probably return the content in the next call.
+        # Not an error, but not a success either. We should handle this case in the future.
         if response.status_code != 200:
-            raise LandaxDataException(f'Error getting document content: {response.text}')
+            raise LandaxDataException(
+                f'Error in GET {url}. Expected status code: 200. Received status code: {response.status_code}.\
+Response body: {response.text}')
 
         return BytesIO(response.content)
 
