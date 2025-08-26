@@ -21,7 +21,7 @@ class Client:
     def __init__(self, url: str, credentials: dict, version='v20'):
         """
         Constructs a new pylandax client
-        :param url: The url of the Landax instance, eg. intrixtest.landax.no
+        :param url: The url of the Landax instance, e.g. intrixtest.landax.no
         :param credentials: A dictionary containing the credentials to use
         :param version: The version of the API to use, defaults to v20
         :return: A new pylandax client
@@ -54,12 +54,12 @@ class Client:
 
         self.headers['Authorization'] = 'Bearer ' + self.oauth_token
 
-    def get_single_data(self, data_model: str, data_id: int, params: {} = None) -> {}:
+    def get_single_data(self, data_model: str, data_id: int, params: {} = None) -> dict:
         """
         Returns a single record of the given data model
-        :param data_model: The data model to fetch in Landax, eg. Contacts, Projects, etc.
+        :param data_model: The data model to fetch in Landax, e.g. Contacts, Projects, etc.
         :param data_id: The id of the record to fetch
-        :param params: A dictionary of parameters passed as html query string parameters, eg. $filter, $expand
+        :param params: A dictionary of parameters passed as html query string parameters, e.g. $filter, $expand
         :return: A dictionary representing a record
         """
         if params is None:
@@ -74,12 +74,12 @@ class Client:
         data = response.json()
         return data
 
-    def get_all_data(self, data_model: str, params: {} = None, select: [] = None) -> [{}]:
+    def get_all_data(self, data_model: str, params: dict = None, select: list = None) -> list[dict]:
         """
         Returns all records of the given data model
-        :param data_model: The data model to fetch in Landax, eg. Contacts, Projects, etc.
-        :param params: A dictionary of parameters passed as html query string parameters, eg. $filter, $expand
-        :param select: A list of fields to select, eg. ['Id', 'Name']
+        :param data_model: The data model to fetch in Landax, e.g. Contacts, Projects, etc.
+        :param params: A dictionary of parameters passed as html query string parameters, e.g. $filter, $expand
+        :param select: A list of fields to select, e.g. ['Id', 'Name']
         :return: A list of dictionaries, each dictionary representing a record
         """
         if params is None:
@@ -107,10 +107,10 @@ class Client:
 
         return data
 
-    def post_data(self, data_model: str, data: {}) -> requests.Response:
+    def post_data(self, data_model: str, data: dict) -> requests.Response:
         """
         Posts data to the given data model in Landax
-        :param data_model: The data model in Landax, eg. Contacts, Projects, etc.
+        :param data_model: The data model in Landax, e.g. Contacts, Projects, etc.
         :param data: the data to post, as a dictionary
         :return: the requests.Response object returned from the post request
         """
@@ -124,7 +124,7 @@ class Client:
     def patch_data(self, data_model: str, key: int, data: dict) -> requests.Response:
         """
         Patches the record with the given key and data
-        :param data_model: The data model in Landax, eg. Contacts, Projects, etc.
+        :param data_model: The data model in Landax, e.g. Contacts, Projects, etc.
         :param key: The key of the record to patch
         :param data: The data to patch, as a dictionary
         :return: the requests.Response object returned from the patch request
@@ -140,7 +140,7 @@ class Client:
     def delete_data(self, data_model: str, key: str) -> requests.Response:
         """
         Deletes the record with the given key
-        :param data_model: The data model in Landax, eg. Contacts, Projects, etc.
+        :param data_model: The data model in Landax, e.g. Contacts, Projects, etc.
         :param key: The key of the record to delete
         :return: the requests.Response object returned from the delete request
         """
@@ -149,7 +149,7 @@ class Client:
         return response
 
     # Helper for the public functions
-    def request_data(self, url: str) -> []:
+    def request_data(self, url: str) -> list:
         response = requests.get(url, headers=self.headers)
         results = response.json()['value']
         return results
@@ -158,7 +158,7 @@ class Client:
         response = requests.get(url, headers=self.headers)
         return response
 
-    def get_documents(self, folder_id: int):
+    def get_documents(self, folder_id: int) -> list[dict]:
         """
         Gets a list of documents in the given folder
         :param folder_id: The id of the folder to get documents from
@@ -167,7 +167,7 @@ class Client:
         params = {'$filter': f'FolderId eq {folder_id}'}
         return self.get_all_data('Documents', params)
 
-    def get_model_documents(self, model: str, id_: int):
+    def get_model_documents(self, model: str, id_: int) -> list[dict]:
         """
         Gets a list of documents linked to the given model and id
         :param model: The model to get documents from
@@ -180,7 +180,7 @@ class Client:
 
         return model_documents
 
-    def upload_document_from_file(self, file: Path, document_object: {} = None):
+    def upload_document_from_file(self, file: Path, document_object: {} = None) -> requests.Response:
         """
         Helper function to upload a file to Landax by using a pathlib.Path object.
         :param file: The file to upload
@@ -204,7 +204,7 @@ class Client:
             self,
             filedata: io.BytesIO,
             filename: str, folder_id: int,
-            document_options: dict = None):
+            document_options: dict = None) -> requests.Response:
         """
         Upload a file to Landax by using an io.BytesIO object directly from memory.
         :param filedata: io.BytesIO object to upload of the document
@@ -231,7 +231,7 @@ To upload a document linked to an object in a module, use pylandax.upload_linked
         response = self.documents_createdocument(filedata, filename, document_options)
         return response
 
-    def get_linked_documents(self, model: str, id_: int) -> [{}]:
+    def get_linked_documents(self, model: str, id_: int) -> list[dict]:
         """
         Gets the linked documents for the given model and id
         :param model: Which model to get documents from
@@ -250,7 +250,7 @@ To upload a document linked to an object in a module, use pylandax.upload_linked
             module_name: str, linked_object_id: int,
             document_options: dict = None) -> requests.Response | None:
         """
-        Upload a document to to Landax linked to another object via a module.
+        Upload a document to Landax linked to another object via a module.
         :param filedata: io.BytesIO object to upload of the document
         :param filename: name of the file in Landax
         :param folder_id: the folder id to upload the document to
@@ -280,7 +280,7 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
 
         module_id = modules[module_name]
 
-        # This mapping maps the module id to the corresponding field name in the DocumentLink object
+        # This mapping converts the module id to the corresponding field name in the DocumentLink object
         # Should be updated as needed
         id_key_mapping = {
             6: 'IncidentId',
@@ -310,7 +310,7 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
         return upload_response
 
     def documents_createdocument(
-            self, filedata: io.BytesIO, filename: str, document_object: dict, document_link: dict = None):
+            self, filedata: io.BytesIO, filename: str, document_object: dict, document_link: dict = None) -> requests.Response:
         """
         Create a document in Landax
         :param filename: The filename of the document
@@ -362,7 +362,7 @@ Response body: {response.text}')
 
         return BytesIO(response.content)
 
-    def push_document_content(self, document_data: io.BytesIO, document_id: int):
+    def push_document_content(self, document_data: io.BytesIO, document_id: int) -> requests.Response:
         """
         Pushes the content of a document with the specified document ID.
         :param document_data: The content of the document as a BytesIO object.
@@ -377,10 +377,10 @@ Response body: {response.text}')
         response = requests.post(url, data=data, headers=self.headers)
         return response
 
-    def custom_request(self, partial_url, method='GET', data=None) -> requests.Response:
+    def custom_request(self, partial_url: str, method: str = 'GET', data: dict = None) -> requests.Response:
         """
         Makes a custom request to the Landax API, given a partial url and a method
-        :param partial_url: A partial URL to Landax, the part after v20/, eg. Documents/GetDocument
+        :param partial_url: A partial URL to Landax, the part after v20/, e.g. Documents/GetDocument
         :param method: The method to use, either GET or POST
         :param data: The data to send in the request, if any (only for POST)
         :return: The response from the request
@@ -403,7 +403,7 @@ Response body: {response.text}')
 
     # Creates a dict given the list of dicts list_in using the metakey
     @staticmethod
-    def list_to_dict(list_in: [{}], metakey: str):
+    def list_to_dict(list_in: list[dict], metakey: str) -> dict:
         return_dict = {}
 
         for record in list_in:
@@ -414,7 +414,7 @@ Response body: {response.text}')
 
         return return_dict
 
-    def get_oauth_token(self):
+    def get_oauth_token(self) -> str:
         url = self.base_url + 'authenticate/token?grant_type=password'
 
         post_body = {
@@ -437,7 +437,7 @@ Response body: {response.text}')
         return response_data['access_token']
 
     @staticmethod
-    def generate_url(base_url: str, html_params: dict):
+    def generate_url(base_url: str, html_params: dict) -> str:
         if len(html_params) == 0:
             return base_url
         result = base_url + '?' + urllib.parse.urlencode(html_params)
