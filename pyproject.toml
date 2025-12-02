@@ -24,4 +24,4 @@ where = ["src"]
 include = ["pylandax*"]
 
 [tool.setuptools.package-data]
-pylandax = ["**/*.json"]
+pylandax = ["*.json"]
