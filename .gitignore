@@ -4,3 +4,4 @@
 /dev/
 /venv/
 .env*
+*.egg-info
