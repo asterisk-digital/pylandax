@@ -1,8 +1,10 @@
 [project]
 name = "pylandax"
-version = "0.1.0"
-requires-python = ">=3.11"
+version = "0.5.0"
 description = "Landax client"
+authors = [{ name = "David Skoland", email = "david.skoland@asterisk.digital" }]
+requires-python = ">=3.11"
+
 readme = "README.md"
 license = { text = "MIT" }
 
@@ -10,16 +12,16 @@ dependencies = [
     "requests>=2.32.5"
 ]
 
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["pylandax*"]
 
 [tool.setuptools.package-data]
-# Make sure to include json files like modules.json
-"pylandax" = ["**/*.json"]
-
-[build-system]
-requires = ["setuptools>=75", "wheel"]
-build-backend = "setuptools.build_meta"
+pylandax = ["**/*.json"]
