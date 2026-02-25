@@ -9,14 +9,6 @@ import requests
 import urllib
 
 
-class LandaxAuthException(Exception):
-    pass
-
-
-class LandaxDataException(Exception):
-    pass
-
-
 class Client:
     def __init__(self, url: str, credentials: dict, version="v20"):
         """

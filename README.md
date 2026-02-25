@@ -3,16 +3,18 @@
 A simple Python library for interfacing with Landax' API. Under active development.
 
 ## Setup
-
-This is typically used as a submodule, which can be added to a python project as follows:
-
-```(bash)
-git submodule add git@github.com:intrix-as/pylandax.git ./src/pylandax
+To set up for development, run:
+```
+uv sync
 ```
 
-This will put pylandax in the src/pylandax folder of the project, which can then be imported as a module.
 
-The library can be used as follows:
+## Installation
+To use in a project, add this in dependencies in pyproject.toml:
+
+```
+"pylandax @ git+ssh://git@github.com/asterisk-digital/pylandax.git@main"
+```
 
 ## Usage
 
