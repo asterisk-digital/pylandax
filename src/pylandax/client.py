@@ -326,13 +326,13 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
         response = requests.post(url, files=files, headers=self.headers)
         return response
 
-    def get_document_content(self, document_id: int, as_pdf=False) -> BytesIO:
+    def get_document_content(self, document_id: int, as_pdf=False) -> BytesIO | None:
         """
         Retrieves the content of a document with the specified document ID.
         :param document_id: the id of the document to retrieve
         :param as_pdf: whether to retrieve the document as a PDF
         :raises LandaxDataException: if the request to Landax fails
-        :return: The document content as a BytesIO buffer
+        :return: The document content as a BytesIO buffer, or None if Landax returns 202 (content still processing)
         """
 
         if as_pdf:
@@ -347,9 +347,10 @@ Warning: pylandax.upload_linked_document does not support ModuleId parameter in 
 
         response = requests.get(url, headers=self.headers)
 
-        # TODO: If we request the document as pdf, we can receive a 202, which means it can't return
-        # the content right now because the pdf export is still processing, but will probably return the content in the next call.
-        # Not an error, but not a success either. We should handle this case in the future.
+        # A 202 means the pdf export is still processing and the content isn't available yet.
+        if response.status_code == 202:
+            return None
+
         if response.status_code != 200:
             raise LandaxDataException(
                 f"Error in GET {url}. Expected status code: 200. Received status code: {response.status_code}.\
