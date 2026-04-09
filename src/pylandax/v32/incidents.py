@@ -18,8 +18,8 @@ class IncidentsAPI:
         raw = self._client.get_all_data("Incidents", params=params, select=select)
         return [Incident.model_validate(item) for item in raw]
 
-    def get(self, incident_id: int, params: dict | None = None) -> Incident | None:
-        raw = self._client.get_single_data("Incidents", incident_id, params=params)
+    def get(self, entity_id: int, params: dict | None = None) -> Incident | None:
+        raw = self._client.get_single_data("Incidents", entity_id, params=params)
         if raw is None:
             return None
         return Incident.model_validate(raw)
@@ -30,14 +30,15 @@ class IncidentsAPI:
         response.raise_for_status()
         return Incident.model_validate(response.json())
 
-    def update(self, incident_id: int, incident: Incident) -> Incident | None:
+    def update(self, entity_id: int, incident: Incident) -> Incident | None:
+        """Full replace of an Incident (HTTP PUT per the v32 spec)."""
         payload = incident.model_dump(by_alias=True, exclude_none=True)
-        response = self._client.patch_data("Incidents", incident_id, payload)
+        response = self._client.put_data("Incidents", entity_id, payload)
         response.raise_for_status()
         if response.status_code == 204:
             return None
         return Incident.model_validate(response.json())
 
-    def delete(self, incident_id: int) -> None:
-        response = self._client.delete_data("Incidents", str(incident_id))
+    def delete(self, entity_id: int) -> None:
+        response = self._client.delete_data("Incidents", str(entity_id))
         response.raise_for_status()

@@ -48,19 +48,20 @@ class Client:
 
         self.headers["Authorization"] = "Bearer " + self.oauth_token
 
-        self._v32 = None
-        if version == "v32":
-            from .v32 import ClientV32
-            self._v32 = ClientV32(self)
+        self._typed_api = None
+        self.version = version
+        if version in _VERSIONED_CLIENTS:
+            self._typed_api = _VERSIONED_CLIENTS[version](self)
 
     @property
-    def v32(self):
-        """Typed v32 API surface. Only available when version='v32'."""
-        if self._v32 is None:
+    def api(self):
+        """Typed API surface for the configured version. Only available for versions with typed clients."""
+        if self._typed_api is None:
             raise AttributeError(
-                "v32 API is not available. Initialize Client with version='v32' to use typed v32 endpoints."
+                f"No typed API available for version '{self.version}'. "
+                f"Supported versions: {', '.join(_VERSIONED_CLIENTS)}."
             )
-        return self._v32
+        return self._typed_api
 
     def get_single_data(self, data_model: str, data_id: int, params: {} = None) -> dict:
         """
@@ -127,6 +128,21 @@ class Client:
         headers["Content-Type"] = "application/json"
 
         response = requests.post(url, json=data, headers=headers)
+        return response
+
+    def put_data(self, data_model: str, key: int, data: dict) -> requests.Response:
+        """
+        Replaces the record with the given key (HTTP PUT).
+        :param data_model: The data model in Landax, e.g. Contacts, Projects, etc.
+        :param key: The key of the record to replace
+        :param data: The full entity data
+        :return: the requests.Response object returned from the put request
+        """
+        url = f"{self.api_url}{data_model}({str(key)})"
+        headers = copy.deepcopy(self.headers)
+        headers["Content-Type"] = "application/json"
+
+        response = requests.put(url, json=data, headers=headers)
         return response
 
     def patch_data(self, data_model: str, key: int, data: dict) -> requests.Response:
@@ -460,3 +476,15 @@ Response body: {response.text}"
             return base_url
         result = base_url + "?" + urllib.parse.urlencode(html_params)
         return result
+
+
+def _load_v32(client: Client):
+    from .v32 import ClientV32
+    return ClientV32(client)
+
+
+# Register typed API clients for each supported version here.
+# To add v33: create src/pylandax/v33/, add a loader function, and register it.
+_VERSIONED_CLIENTS: dict[str, callable] = {
+    "v32": _load_v32,
+}

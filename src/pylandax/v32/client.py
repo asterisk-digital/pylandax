@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .documents import DocumentsAPI
 from .incidents import IncidentsAPI
 
 if TYPE_CHECKING:
@@ -14,3 +15,4 @@ class ClientV32:
     def __init__(self, client: Client) -> None:
         self._client = client
         self.incidents = IncidentsAPI(client)
+        self.documents = DocumentsAPI(client)

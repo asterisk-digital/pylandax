@@ -12,7 +12,7 @@ def test_basic():
         conf = json.loads(file.read())["landax"]
 
     try:
-        client = pylandax.Client(
+        pylandax.Client(
             url=conf["url"],
             version=conf["version"],
             username=conf["username"],

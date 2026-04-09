@@ -28,7 +28,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--ignore=tests/landax_interaction_test.py"
 
 [tool.tox]
 env_list = ["py313", "py314"]
