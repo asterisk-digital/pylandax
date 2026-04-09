@@ -1,11 +1,10 @@
 {
 	"landax": {
-		"url": "example.landax.no",
-		"credentials": {
-			"client_id": "123456",
-			"client_secret": "123456",
-			"username": "123456",
-			"password": "123456"
-		}
+		"url": "https://example.landax.no",
+		"version": "v20",
+		"username": "123456",
+		"password": "123456",
+		"client_id": "123456",
+		"client_secret": "123456"
 	}
 }

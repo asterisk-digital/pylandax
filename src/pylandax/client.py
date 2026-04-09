@@ -8,34 +8,39 @@ from io import BytesIO
 import requests
 import urllib
 
+from .exceptions import LandaxAuthException, LandaxDataException
+
 
 class Client:
-    def __init__(self, url: str, credentials: dict, version="v20"):
+    def __init__(
+        self,
+        url: str,
+        version: str,
+        username: str,
+        password: str,
+        client_id: str,
+        client_secret: str,
+    ):
         """
-        Constructs a new pylandax client
-        :param url: The url of the Landax instance, e.g. intrixtest.landax.no
-        :param credentials: A dictionary containing the credentials to use
-        :param version: The version of the API to use, defaults to v20
-        :return: A new pylandax client
+        Constructs a new pylandax client.
+        :param url: Full URL of the Landax instance, e.g. https://example.landax.no
+        :param version: API version to use, e.g. 'v20', 'v32'
+        :param username: Landax username
+        :param password: Landax password
+        :param client_id: OAuth client ID
+        :param client_secret: OAuth client secret
         """
 
         self.script_dir = Path(__file__).parent.absolute()
 
         self.logger = logging.getLogger(__name__)
 
-        required_credentials = ["username", "password", "client_id", "client_secret"]
+        self.username = username
+        self.password = password
+        self.client_id = client_id
+        self.client_secret = client_secret
 
-        for key in required_credentials:
-            if key not in credentials:
-                self.logger.error(f"Error: credential field is required: {key}")
-                return
-
-        self.username = credentials["username"]
-        self.password = credentials["password"]
-        self.client_id = credentials["client_id"]
-        self.client_secret = credentials["client_secret"]
-
-        self.base_url = f"https://{url}/"
+        self.base_url = url.rstrip("/") + "/"
         self.api_url = f"{self.base_url}api/{version}/"
         self.headers = {}
 

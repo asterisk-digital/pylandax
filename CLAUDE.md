@@ -23,8 +23,10 @@ src/pylandax/
 
 ## Commands
 
-- `uv sync` — install/sync dependencies
-- `uv run python -m pytest` — run tests
+- `uv sync --group dev` — install/sync dependencies including dev tools
+- `uv run tox` — run tests (across py313, py314)
+- `uv run ruff check .` — lint
+- `uv run ruff format .` — format
 - `uv run python <script>` — run any script
 
 ## OpenAPI spec
@@ -38,6 +40,6 @@ curl -o docs/openapi_v32.json https://euroskilt.landax.no/api/v32/openapi.json
 ## Key conventions
 
 - Uses **uv** for package management. Never use pip.
-- Python >=3.11.
+- Python >=3.13.
 - v32 models use Pydantic with `alias=PascalCase` (matching the API) and `snake_case` Python attributes.
 - The OpenAPI spec for v32 is at `docs/openapi_v32.json`.

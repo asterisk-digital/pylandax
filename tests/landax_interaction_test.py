@@ -8,10 +8,14 @@ import pylandax
 
 script_dir = Path(os.path.dirname(os.path.realpath(__file__)))
 
-url = "example.landax.no"
-credentials = {"client_id": "123456", "client_secret": "123456", "username": "123456", "password": "123456"}
-
-client = pylandax.Client(url, credentials)
+client = pylandax.Client(
+    url="https://example.landax.no",
+    version="v20",
+    username="123456",
+    password="123456",
+    client_id="123456",
+    client_secret="123456",
+)
 
 
 def test_all_data_functions():

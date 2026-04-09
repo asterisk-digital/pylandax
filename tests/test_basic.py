@@ -1,13 +1,9 @@
-import os
-import sys
 import json
 from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
-
 import pylandax
 
-script_dir = Path(os.path.dirname(os.path.realpath(__file__)))
+script_dir = Path(__file__).parent
 
 
 def test_basic():
@@ -16,7 +12,14 @@ def test_basic():
         conf = json.loads(file.read())["landax"]
 
     try:
-        client = pylandax.Client(conf["url"], conf["credentials"])
+        client = pylandax.Client(
+            url=conf["url"],
+            version=conf["version"],
+            username=conf["username"],
+            password=conf["password"],
+            client_id=conf["client_id"],
+            client_secret=conf["client_secret"],
+        )
     # Since the URL is bogus, this is what we expect
     except pylandax.LandaxAuthException:
         pass
