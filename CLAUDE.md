@@ -27,6 +27,14 @@ src/pylandax/
 - `uv run python -m pytest` — run tests
 - `uv run python <script>` — run any script
 
+## OpenAPI spec
+
+The file `docs/openapi_v32.json` is **not committed to Git** (gitignored). If it's missing, download it:
+
+```
+curl -o docs/openapi_v32.json https://euroskilt.landax.no/api/v32/openapi.json
+```
+
 ## Key conventions
 
 - Uses **uv** for package management. Never use pip.
