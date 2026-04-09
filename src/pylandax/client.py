@@ -43,6 +43,20 @@ class Client:
 
         self.headers["Authorization"] = "Bearer " + self.oauth_token
 
+        self._v32 = None
+        if version == "v32":
+            from .v32 import ClientV32
+            self._v32 = ClientV32(self)
+
+    @property
+    def v32(self):
+        """Typed v32 API surface. Only available when version='v32'."""
+        if self._v32 is None:
+            raise AttributeError(
+                "v32 API is not available. Initialize Client with version='v32' to use typed v32 endpoints."
+            )
+        return self._v32
+
     def get_single_data(self, data_model: str, data_id: int, params: {} = None) -> dict:
         """
         Returns a single record of the given data model
