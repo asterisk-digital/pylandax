@@ -25,12 +25,12 @@ def test_basic():
         pass
 
 
-def test_generate_url():
+def test_build_url():
     base_url = "https://test.landax.com"
     params = {"$test": "test", "$test2": "test2"}
 
-    result = pylandax.Client.generate_url(base_url, params)
+    result = pylandax.Client._build_url(base_url, params)
     assert result == "https://test.landax.com?%24test=test&%24test2=test2"
 
-    result2 = pylandax.Client.generate_url(base_url, {})
+    result2 = pylandax.Client._build_url(base_url, {})
     assert result2 == "https://test.landax.com"

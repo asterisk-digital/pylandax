@@ -1,14 +1,10 @@
-from pathlib import Path
-import json
 import copy
-import io
 import logging
-from io import BytesIO
-
-import requests
 import urllib
 
-from .exceptions import LandaxAuthException, LandaxDataException
+import requests
+
+from .exceptions import LandaxAuthException
 
 
 class Client:
@@ -24,14 +20,12 @@ class Client:
         """
         Constructs a new pylandax client.
         :param url: Full URL of the Landax instance, e.g. https://example.landax.no
-        :param version: API version to use, e.g. 'v20', 'v32'
+        :param version: API version to use, e.g. 'v32'
         :param username: Landax username
         :param password: Landax password
         :param client_id: OAuth client ID
         :param client_secret: OAuth client secret
         """
-
-        self.script_dir = Path(__file__).parent.absolute()
 
         self.logger = logging.getLogger(__name__)
 
@@ -44,8 +38,7 @@ class Client:
         self.api_url = f"{self.base_url}api/{version}/"
         self.headers = {}
 
-        self.oauth_token = self.get_oauth_token()
-
+        self.oauth_token = self._authenticate()
         self.headers["Authorization"] = "Bearer " + self.oauth_token
 
         self._typed_api = None
@@ -55,7 +48,7 @@ class Client:
 
     @property
     def api(self):
-        """Typed API surface for the configured version. Only available for versions with typed clients."""
+        """Typed API surface for the configured version."""
         if self._typed_api is None:
             raise AttributeError(
                 f"No typed API available for version '{self.version}'. "
@@ -63,391 +56,68 @@ class Client:
             )
         return self._typed_api
 
-    def get_single_data(self, data_model: str, data_id: int, params: {} = None) -> dict:
-        """
-        Returns a single record of the given data model
-        :param data_model: The data model to fetch in Landax, e.g. Contacts, Projects, etc.
-        :param data_id: The id of the record to fetch
-        :param params: A dictionary of parameters passed as html query string parameters, e.g. $filter, $expand
-        :return: A dictionary representing a record
-        """
-        if params is None:
-            params = {}
+    # -- HTTP verbs ----------------------------------------------------------
 
-        base_url = f"{self.api_url}{data_model}({str(data_id)})"
-        url = self.generate_url(base_url, params)
+    def get(self, resource: str, entity_id: int, *, query_params: dict | None = None) -> dict | None:
+        """GET a single entity by ID. Returns None on 404."""
+        url = self._build_url(f"{self.api_url}{resource}({entity_id})", query_params)
         response = requests.get(url, headers=self.headers)
         if response.status_code == 404:
             return None
+        return response.json()
 
-        data = response.json()
-        return data
-
-    def get_all_data(self, data_model: str, params: dict = None, select: list = None) -> list[dict]:
-        """
-        Returns all records of the given data model
-        :param data_model: The data model to fetch in Landax, e.g. Contacts, Projects, etc.
-        :param params: A dictionary of parameters passed as html query string parameters, e.g. $filter, $expand
-        :param select: A list of fields to select, e.g. ['Id', 'Name']
-        :return: A list of dictionaries, each dictionary representing a record
-        """
-        if params is None:
-            params = {}
-
-        if "$top" in params:
-            print("Warning: pylandax.get_all_data does not support $top parameter. It will be ignored.")
-            del params["$top"]
-
-        if "$skip" in params:
-            print("Warning: pylandax.get_all_data does not support $skip parameter. It will be ignored.")
-            del params["$skip"]
+    def list(self, resource: str, *, select: list[str] | None = None, query_params: dict | None = None) -> list[dict]:
+        """GET all entities, automatically following pagination."""
+        if query_params is None:
+            query_params = {}
 
         if select is not None:
-            params["$select"] = ",".join(select)
+            query_params["select"] = ",".join(select)
 
-        base_url = f"{self.api_url}{data_model}"
-        initial_url = self.generate_url(base_url, params)
-        response = self.request_raw(initial_url)
+        url = self._build_url(f"{self.api_url}{resource}", query_params)
+        response = self._get(url)
         data = response.json()["value"]
-        while "@odata.nextLink" in response.json():
-            new_url = response.json()["@odata.nextLink"]
-            response = self.request_raw(new_url)
+        while "nextLink" in response.json():
+            response = self._get(response.json()["nextLink"])
             data = data + response.json()["value"]
 
         return data
 
-    def post_data(self, data_model: str, data: dict) -> requests.Response:
-        """
-        Posts data to the given data model in Landax
-        :param data_model: The data model in Landax, e.g. Contacts, Projects, etc.
-        :param data: the data to post, as a dictionary
-        :return: the requests.Response object returned from the post request
-        """
-        url = self.api_url + data_model
+    def post(self, resource: str, *, data: dict) -> requests.Response:
+        """POST a new entity."""
+        url = self.api_url + resource
+        headers = self._json_headers()
+        return requests.post(url, json=data, headers=headers)
+
+    def put(self, resource: str, entity_id: int, *, data: dict) -> requests.Response:
+        """PUT (full replace) an entity by ID."""
+        url = f"{self.api_url}{resource}({entity_id})"
+        headers = self._json_headers()
+        return requests.put(url, json=data, headers=headers)
+
+    def patch(self, resource: str, entity_id: int, *, data: dict) -> requests.Response:
+        """PATCH (partial update) an entity by ID."""
+        url = f"{self.api_url}{resource}({entity_id})"
+        headers = self._json_headers()
+        return requests.patch(url, json=data, headers=headers)
+
+    def delete(self, resource: str, entity_id: int) -> requests.Response:
+        """DELETE an entity by ID."""
+        url = f"{self.api_url}{resource}({entity_id})"
+        return requests.delete(url, headers=self.headers)
+
+    # -- Internal helpers ----------------------------------------------------
+
+    def _get(self, url: str) -> requests.Response:
+        """Authenticated GET to an absolute URL."""
+        return requests.get(url, headers=self.headers)
+
+    def _json_headers(self) -> dict:
         headers = copy.deepcopy(self.headers)
         headers["Content-Type"] = "application/json"
+        return headers
 
-        response = requests.post(url, json=data, headers=headers)
-        return response
-
-    def put_data(self, data_model: str, key: int, data: dict) -> requests.Response:
-        """
-        Replaces the record with the given key (HTTP PUT).
-        :param data_model: The data model in Landax, e.g. Contacts, Projects, etc.
-        :param key: The key of the record to replace
-        :param data: The full entity data
-        :return: the requests.Response object returned from the put request
-        """
-        url = f"{self.api_url}{data_model}({str(key)})"
-        headers = copy.deepcopy(self.headers)
-        headers["Content-Type"] = "application/json"
-
-        response = requests.put(url, json=data, headers=headers)
-        return response
-
-    def patch_data(self, data_model: str, key: int, data: dict) -> requests.Response:
-        """
-        Patches the record with the given key and data
-        :param data_model: The data model in Landax, e.g. Contacts, Projects, etc.
-        :param key: The key of the record to patch
-        :param data: The data to patch, as a dictionary
-        :return: the requests.Response object returned from the patch request
-        """
-        url = f"{self.api_url}{data_model}({str(key)})"
-        headers = copy.deepcopy(self.headers)
-        headers["Content-Type"] = "application/json"
-
-        response = requests.patch(url, json=data, headers=headers)
-        return response
-
-    # Deletes data with the given key
-    def delete_data(self, data_model: str, key: str) -> requests.Response:
-        """
-        Deletes the record with the given key
-        :param data_model: The data model in Landax, e.g. Contacts, Projects, etc.
-        :param key: The key of the record to delete
-        :return: the requests.Response object returned from the delete request
-        """
-        url = f"{self.api_url}{data_model}({key})?$format=json"
-        response = requests.delete(url, headers=self.headers)
-        return response
-
-    # Helper for the public functions
-    def request_data(self, url: str) -> list:
-        response = requests.get(url, headers=self.headers)
-        results = response.json()["value"]
-        return results
-
-    def request_raw(self, url: str) -> requests.Response:
-        response = requests.get(url, headers=self.headers)
-        return response
-
-    def get_documents(self, folder_id: int) -> list[dict]:
-        """
-        Gets a list of documents in the given folder
-        :param folder_id: The id of the folder to get documents from
-        :return: A list of dictionaries, each dictionary representing a document
-        """
-        params = {"$filter": f"FolderId eq {folder_id}"}
-        return self.get_all_data("Documents", params)
-
-    def get_model_documents(self, model: str, id_: int) -> list[dict]:
-        """
-        Gets a list of documents linked to the given model and id
-        :param model: The model to get documents from
-        :param id_: The id of the model to get documents from
-        :return: A list of dictionaries, each dictionary representing a document
-        """
-        url_fragment = f"{model}({id_})/Documents"
-
-        model_documents = self.get_all_data(url_fragment)
-
-        return model_documents
-
-    def upload_document_from_file(self, file: Path, document_object: {} = None) -> requests.Response:
-        """
-        Helper function to upload a file to Landax by using a pathlib.Path object.
-        :param file: The file to upload
-        :param document_object: The associated document object, per the Landax API
-        :return: requests.Response object, containing the response from Landax
-        """
-        if document_object is None:
-            document_object = {}
-
-        if not isinstance(file, Path):
-            raise TypeError("file must be a pathlib.Path")
-
-        if not file.exists():
-            raise FileNotFoundError("file does not exist: " + str(file))
-
-        document_bytes = io.BytesIO(file.read_bytes())
-
-        return self.upload_document(document_bytes, file.name, document_object)
-
-    def upload_document(
-        self, filedata: io.BytesIO, filename: str, folder_id: int, document_options: dict = None
-    ) -> requests.Response:
-        """
-        Upload a file to Landax by using an io.BytesIO object directly from memory.
-        :param filedata: io.BytesIO object to upload of the document
-        :param filename: name of the file
-        :param folder_id: The folder ID to upload the document to
-        :param document_options: The document options as a dictionary, per the Landax API. Eg. IsTemplate, Number
-        :return requests.Response object, containing the response from Landax
-        """
-        if document_options is None:
-            document_options = {}
-
-        if "FolderId" in document_options:
-            logging.warning(
-                "\
-Warning: pylandax.upload_document does not support FolderId parameter in document_options. It will be ignored."
-            )
-
-        if "ModuleId" in document_options:
-            logging.warning(
-                "\
-Warning: pylandax.upload_document does not support ModuleId parameter in document_options. It will be ignored. \
-To upload a document linked to an object in a module, use pylandax.upload_linked_document instead."
-            )
-            del document_options["ModuleId"]
-
-        document_options["FolderId"] = folder_id
-
-        response = self.documents_createdocument(filedata, filename, document_options)
-        return response
-
-    def get_linked_documents(self, model: str, id_: int) -> list[dict]:
-        """
-        Gets the linked documents for the given model and id
-        :param model: Which model to get documents from
-        :param id_: ID of the object
-        :return: A list of dictionaries, each dictionary representing a document
-        """
-        url_fragment = f"{model}({id_})/Documents"
-
-        linked_documents = self.get_all_data(url_fragment)
-
-        return linked_documents
-
-    def upload_linked_document(
-        self,
-        filedata: io.BytesIO,
-        filename: str,
-        folder_id: int | None,
-        module_name: str,
-        linked_object_id: int,
-        document_options: dict = None,
-    ) -> requests.Response | None:
-        """
-        Upload a document to Landax linked to another object via a module.
-        :param filedata: io.BytesIO object to upload of the document
-        :param filename: name of the file in Landax
-        :param folder_id: the folder id to upload the document to
-        :param module_name: name of the module to link the document to
-        :param linked_object_id: the object id to associate with the document
-        :param document_options: a dictionary of options to pass to the document object
-        :return: True if the document was successfully uploaded and linked, False if something went wrong
-        """
-
-        if document_options is None:
-            document_options = {}
-
-        if "FolderId" in document_options:
-            logging.warning(
-                "\
-Warning: pylandax.upload_linked_document does not support FolderId parameter in document_options. It will be ignored."
-            )
-
-        if "ModuleId" in document_options:
-            logging.warning(
-                "\
-Warning: pylandax.upload_linked_document does not support ModuleId parameter in document_options. It will be ignored."
-            )
-
-        with open(Path(self.script_dir, "modules.json")) as file:
-            modules = json.loads(file.read())
-
-        if module_name not in modules:
-            logging.error(f"Error in pylandax.upload_linked_document: Module {module_name} not found.")
-            return None
-
-        module_id = modules[module_name]
-
-        # This mapping converts the module id to the corresponding field name in the DocumentLink object
-        # Should be updated as needed
-        id_key_mapping = {
-            6: "IncidentId",
-            10: "CoworkerId",
-            24: "EquipmentId",
-        }
-
-        if module_id not in id_key_mapping:
-            logging.error(f"Error in pylandax.upload_linked_document: Module {module_name}'s id has no mapping to key")
-            return None
-
-        object_id_key = id_key_mapping[module_id]
-
-        document_options["ModuleId"] = module_id
-
-        document_link = {object_id_key: linked_object_id}
-
-        if folder_id is not None:
-            document_link["FolderId"] = folder_id
-
-        upload_response = self.documents_createdocument(filedata, filename, document_options, document_link)
-        if upload_response.status_code != 200:
-            logging.error(f"Error uploading document with filename {filename}: " + upload_response.text)
-
-        return upload_response
-
-    def documents_createdocument(
-        self, filedata: io.BytesIO, filename: str, document_object: dict, document_link: dict = None
-    ) -> requests.Response:
-        """
-        Create a document in Landax
-        :param filename: The filename of the document
-        :param filedata: The filedata of the document
-        :param document_object: The document object to create
-        :param document_link: The document link to create
-        :return: The response from Landax
-        """
-        files = {"document": (None, json.dumps(document_object)), "fileData": (filename, filedata)}
-
-        if document_link is not None:
-            files["documentLink"] = (None, json.dumps(document_link))
-
-        url = self.api_url + "Documents/CreateDocument"
-        response = requests.post(url, files=files, headers=self.headers)
-        return response
-
-    def get_document_content(self, document_id: int, as_pdf=False) -> BytesIO | None:
-        """
-        Retrieves the content of a document with the specified document ID.
-        :param document_id: the id of the document to retrieve
-        :param as_pdf: whether to retrieve the document as a PDF
-        :raises LandaxDataException: if the request to Landax fails
-        :return: The document content as a BytesIO buffer, or None if Landax returns 202 (content still processing)
-        """
-
-        if as_pdf:
-            # If original=False, the document runs output processing and is turned into a pdf
-            original_arg = "False"
-        else:
-            # If original=True, the document skips output processing and is returned as is
-            original_arg = "True"
-
-        # encode=raw returns the document as a byte stream
-        url = self.api_url + f"Documents/GetContent?documentid={document_id}&original={original_arg}&encode=raw"
-
-        response = requests.get(url, headers=self.headers)
-
-        # A 202 means the pdf export is still processing and the content isn't available yet.
-        if response.status_code == 202:
-            return None
-
-        if response.status_code != 200:
-            raise LandaxDataException(
-                f"Error in GET {url}. Expected status code: 200. Received status code: {response.status_code}.\
-Response body: {response.text}"
-            )
-
-        return BytesIO(response.content)
-
-    def push_document_content(self, document_data: io.BytesIO, document_id: int) -> requests.Response:
-        """
-        Pushes the content of a document with the specified document ID.
-        :param document_data: The content of the document as a BytesIO object.
-        :param document_id: The ID of the document.
-        :return: The response object containing the result of the request.
-        """
-        doc_id = str(document_id)
-        url = self.api_url + f"Documents/PushContent?documentid={doc_id}"
-
-        data = document_data.read()
-
-        response = requests.post(url, data=data, headers=self.headers)
-        return response
-
-    def custom_request(self, partial_url: str, method: str = "GET", data: dict = None) -> requests.Response:
-        """
-        Makes a custom request to the Landax API, given a partial url and a method
-        :param partial_url: A partial URL to Landax, the part after v20/, e.g. Documents/GetDocument
-        :param method: The method to use, either GET or POST
-        :param data: The data to send in the request, if any (only for POST)
-        :return: The response from the request
-        """
-        url = self.api_url + partial_url
-
-        if method == "GET":
-            response = requests.get(url, headers=self.headers)
-        elif method == "POST":
-            response = requests.post(url, json=data, headers=self.headers)
-        elif method == "PATCH":
-            response = requests.patch(url, json=data, headers=self.headers)
-        elif method == "DELETE":
-            response = requests.delete(url, headers=self.headers)
-        else:
-            raise ValueError(
-                f"pylandax.custom_request: Invalid method: {method}. Accepted methods: GET, POST, PATCH, DELETE"
-            )
-
-        return response
-
-    # Creates a dict given the list of dicts list_in using the metakey
-    @staticmethod
-    def list_to_dict(list_in: list[dict], metakey: str) -> dict:
-        return_dict = {}
-
-        for record in list_in:
-            key = record[metakey]
-            if key in return_dict:
-                print(f"Warning: {key} already present, overwriting")
-            return_dict[key] = record
-
-        return return_dict
-
-    def get_oauth_token(self) -> str:
+    def _authenticate(self) -> str:
         url = self.base_url + "authenticate/token?grant_type=password"
 
         post_body = {
@@ -471,11 +141,10 @@ Response body: {response.text}"
         return response_data["access_token"]
 
     @staticmethod
-    def generate_url(base_url: str, html_params: dict) -> str:
-        if len(html_params) == 0:
+    def _build_url(base_url: str, query_params: dict | None = None) -> str:
+        if not query_params:
             return base_url
-        result = base_url + "?" + urllib.parse.urlencode(html_params)
-        return result
+        return base_url + "?" + urllib.parse.urlencode(query_params)
 
 
 def _load_v32(client: Client):

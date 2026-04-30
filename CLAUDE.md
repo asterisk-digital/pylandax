@@ -12,15 +12,17 @@ The current codebase targets API v20 with untyped dict-based responses. The goal
 
 ```
 src/pylandax/
-  client.py         # Core Client class (v20 default, versioned API via .api property)
+  client.py         # Core Client class (auth, base HTTP, version registry)
   versioned.py      # Protocols (CrudAPI, VersionedClient) for versioned API contract
   exceptions.py     # LandaxAuthException, LandaxDataException
-  modules.json      # Module name -> ID mapping
   v32/
     models.py       # Pydantic models (Incident, Document, DTOs, enums)
     incidents.py    # Typed IncidentsAPI
     documents.py    # Typed DocumentsAPI (CRUD + content + linked uploads)
     client.py       # ClientV32 — aggregates typed endpoint classes
+  _deprecated/
+    client_v20.py   # Old v20 client with untyped document helpers (not importable)
+    modules.json    # Legacy module name -> ID mapping
 ```
 
 ## Commands
