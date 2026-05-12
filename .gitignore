@@ -23,3 +23,5 @@ uv.lock
 
 /cache/
 .tox/
+
+.claude/
