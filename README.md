@@ -1,84 +1,62 @@
 # pylandax
 
-A simple Python library for interfacing with Landax' API. Under active development.
+A Python client library for the Landax API. Under active development.
 
 ## Setup
-To set up for development, run:
-```
-uv sync
-```
 
+```
+uv sync --group dev
+```
 
 ## Installation
-To use in a project, add this in dependencies in pyproject.toml:
+
+Add to your project's `pyproject.toml` dependencies:
 
 ```
 "pylandax @ git+ssh://git@github.com/asterisk-digital/pylandax.git@main"
 ```
 
-## Usage
+## Usage (v32 typed API)
 
-```(python)
+```python
 import pylandax
+from pylandax.v32.models import Incident, CreateDocumentWithLinkDto
 
-url = 'eksempel.landax.no'
-credentials = {
-  'username': 'my_user',
-  'password': 'my_password',
-  'client_id': 'my_client_id',
-  'client_secret': 'my_client_secret'
-}
+client = pylandax.Client(
+    url='https://eksempel.landax.no',
+    version='v32',
+    username='my_user',
+    password='my_password',
+    client_id='my_client_id',
+    client_secret='my_client_secret',
+)
 
-client = pylandax.Client(url, credentials)
+# Incidents
+incidents = client.api.incidents.get_all()
+incident = client.api.incidents.get(42)
+new_incident = client.api.incidents.create(Incident(Subject='Equipment failure'))
+client.api.incidents.update(42, Incident(Subject='Updated subject', IsClosed=True))
+client.api.incidents.delete(42)
 
-# Getting data
-# The Contacts table is used an example here, but any table in Landax works
-result = client.get_all_data('Contacts')
+# Documents
+documents = client.api.documents.get_by_folder(100)
+linked_docs = client.api.documents.get_linked('Incidents', 42)
+content = client.api.documents.get_content(document_id=10, as_pdf=True)
 
-# Posting data, using Contacts as example again
-new_contact = {
-  'FirstName': 'Example Corp.',
-}
-
-client.post_data('Contacts', new_contact)
+# Upload a document linked to an incident
+from io import BytesIO
+filedata = BytesIO(open('report.pdf', 'rb').read())
+result = client.api.documents.create_with_link(
+    filedata=filedata,
+    filename='report.pdf',
+    document=CreateDocumentWithLinkDto(ModelName='Incidents', RecordId=42),
+)
 ```
 
-## Uploading documents
+## Development
 
-To upload a document, it's recommended to pass a Path-object and folder id to the upload_document like so:
-
-```(python)
-from pathlib import Path
-
-import pylandax
-
-# Credentials and URL as defined above
-client = pylandax.Client(url, credentials)
-# Example values, this case assumes the file is in cwd
-my_file = Path('myfile.pdf')
-folder_id = 100
-
-# The function returns the requests.Response object
-response = client.upload_document(open(my_file, 'rb').read(), folder_id)
 ```
-
-## Uploading linked documents
-
-By default, uploaded documents will be associated with the Documents module in Landax and tied to its folder ids.
-
-However, it may be desirable to upload documents linked to other objects in other modules, such as coworkers or equipment.
-
-In this case, a different function has to be used. In this example, we'll upload a document linked to a coworker:
-
-```(python)
-    coworker_id = 123
-    filename = 'test.pdf'
-    # Folder id in the coworkers module
-    folder_id = 560
-    # Not all modules are implemented in pylandax yet, see the source code for the full list
-    module_name = 'COWORKERS'
-
-    # The function returns True if all is successful and False if not
-    upload_succeeded = client.landax_client.upload_linked_document(
-        open(filename, 'rb').read(), filename, folder_id, module_name, coworker_id)
+uv run ruff check .    # lint
+uv run ruff format .   # format
+uv run tox             # run tests (py313, py314)
 ```

@@ -16,16 +16,14 @@ def main():
     envpath = Path(script_dir, "..", ".env-dev")
     dotenv.load_dotenv(envpath)
 
-    conf = {
-        "url": os.getenv("LANDAX_URL"),
-        "credentials": {
-            "username": os.getenv("LANDAX_USERNAME"),
-            "password": os.getenv("LANDAX_PASSWORD"),
-            "client_id": os.getenv("LANDAX_CLIENT_ID"),
-            "client_secret": os.getenv("LANDAX_CLIENT_SECRET"),
-        },
-    }
-    client = pylandax.Client(conf["url"], conf["credentials"])
+    client = pylandax.Client(
+        url=os.getenv("LANDAX_URL"),
+        version="v20",
+        username=os.getenv("LANDAX_USERNAME"),
+        password=os.getenv("LANDAX_PASSWORD"),
+        client_id=os.getenv("LANDAX_CLIENT_ID"),
+        client_secret=os.getenv("LANDAX_CLIENT_SECRET"),
+    )
 
     incident_id = 40
 
