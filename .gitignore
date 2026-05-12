@@ -23,4 +23,4 @@ uv.lock
 
 /cache/
 .tox/
-.claude
+.claude/
