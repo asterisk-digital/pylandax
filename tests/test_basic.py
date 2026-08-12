@@ -2,6 +2,9 @@ import os
 import sys
 import json
 from pathlib import Path
+from unittest.mock import patch, Mock
+
+import pytest
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 
@@ -15,11 +18,15 @@ def test_basic():
     with open(confpath) as file:
         conf = json.loads(file.read())["landax"]
 
-    try:
-        client = pylandax.Client(conf["url"], conf["credentials"])
-    # Since the URL is bogus, this is what we expect
-    except pylandax.LandaxAuthException:
-        pass
+    # Mock the OAuth request so the test never hits the network. A non-200
+    # response is what we expect the client to raise on.
+    mock_response = Mock()
+    mock_response.status_code = 401
+    mock_response.content = b'{"error": "unauthorized"}'
+
+    with patch("pylandax.client.requests.post", return_value=mock_response):
+        with pytest.raises(pylandax.LandaxAuthException):
+            pylandax.Client(conf["url"], conf["credentials"])
 
 
 def test_generate_url():
