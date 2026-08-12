@@ -82,3 +82,30 @@ In this case, a different function has to be used. In this example, we'll upload
     upload_succeeded = client.landax_client.upload_linked_document(
         open(filename, 'rb').read(), filename, folder_id, module_name, coworker_id)
 ```
+
+## Development
+
+### Setup
+
+To set up the python environment you need `uv`, then run:
+```(bash)
+uv sync
+```
+
+### Run linter
+
+```(bash)
+uv run ruff check .
+```
+
+### Run tests
+
+```(bash)
+uv run tox
+```
+
+### Run formatter
+
+```(bash)
+uv run ruff format .
+```
