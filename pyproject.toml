@@ -26,7 +26,7 @@ python_files = ["test_*.py"]
 
 [tool.tox]
 requires = ["tox>=4.21"]
-env_list = ["py311", "py312", "py313"]
+env_list = ["py311", "py312", "py313", "py314"]
 
 [tool.tox.env_run_base]
 description = "Run tests with pytest"
