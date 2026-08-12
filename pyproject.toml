@@ -12,6 +12,29 @@ dependencies = [
     "requests>=2.32.5"
 ]
 
+[dependency-groups]
+dev = [
+    "ruff==0.15.7",
+    "tox==4.50.3",
+    "tox-uv==1.33.4",
+    "pytest==9.0.3",
+]
+
+[tool.pytest.ini_options]
+# Only collect files named test_*.py; excludes live integration modules.
+python_files = ["test_*.py"]
+
+[tool.tox]
+requires = ["tox>=4.21"]
+env_list = ["py311", "py312", "py313", "py314"]
+
+[tool.tox.env_run_base]
+description = "Run tests with pytest"
+package = "editable"
+set_env = { PYTHONPATH = "{tox_root}/src" }
+allowlist_externals = ["pytest"]
+commands = [["pytest"]]
+
 [build-system]
 requires = ["setuptools>=75", "wheel"]
 build-backend = "setuptools.build_meta"
