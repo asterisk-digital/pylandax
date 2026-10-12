@@ -14,7 +14,9 @@ class IncidentsAPI:
     def __init__(self, client: Client) -> None:
         self._client = client
 
-    def get_all(self, query_params: dict | None = None, select: list[str] | None = None) -> list[Incident]:
+    def get_all(
+        self, query_params: dict | None = None, select: list[str] | None = None
+    ) -> list[Incident]:
         raw = self._client.list("Incidents", select=select, query_params=query_params)
         return [Incident.model_validate(item) for item in raw]
 

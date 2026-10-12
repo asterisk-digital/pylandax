@@ -202,7 +202,9 @@ class Incident(BaseModel):
     # Miscellaneous
     DaysOfAbsence: int | None = None
     Downtime: int | None = None
-    GeographicData_: GeographicData | None = Field(None, alias="GeographicData", serialization_alias="GeographicData")
+    GeographicData_: GeographicData | None = Field(
+        None, alias="GeographicData", serialization_alias="GeographicData"
+    )
     Longitude: float | None = None
     Latitude: float | None = None
     ChangedCoordinatesDateTime: datetime | None = None
@@ -242,7 +244,9 @@ class Document(BaseModel):
     Description: str | None = None
     TypeId: int | None = None
     CategoryId: int | None = None
-    DocumentType_: DocumentType | None = Field(None, alias="DocumentType", serialization_alias="DocumentType")
+    DocumentType_: DocumentType | None = Field(
+        None, alias="DocumentType", serialization_alias="DocumentType"
+    )
     HyperLinkUrl: str | None = None
     FileId: int | None = None
     DepartmentIds: list[int] | None = None
@@ -265,7 +269,9 @@ class Document(BaseModel):
     OfflineInApp: bool | None = None
     Longitude: float | None = None
     Latitude: float | None = None
-    Status_: DocumentStatus | None = Field(None, alias="Status", serialization_alias="Status")
+    Status_: DocumentStatus | None = Field(
+        None, alias="Status", serialization_alias="Status"
+    )
     Notes: str | None = None
     DurationDate: date | None = None
     RevisedDateTime: date | None = None
@@ -309,7 +315,9 @@ class Document(BaseModel):
     TagReference8Ids: list[int] | None = None
     TagReference9Ids: list[int] | None = None
     TagReference10Ids: list[int] | None = None
-    Config_: DocumentConfigDto | None = Field(None, alias="Config", serialization_alias="Config")
+    Config_: DocumentConfigDto | None = Field(
+        None, alias="Config", serialization_alias="Config"
+    )
     Tag1: str | None = None
     Tag2: str | None = None
     Tag3: str | None = None
@@ -345,7 +353,9 @@ class CreateDocumentDto(BaseModel):
     DocumentGuid: str | None = None
     VersionGuid: str | None = None
     Description: str | None = None
-    DocumentType_: DocumentType | None = Field(None, alias="DocumentType", serialization_alias="DocumentType")
+    DocumentType_: DocumentType | None = Field(
+        None, alias="DocumentType", serialization_alias="DocumentType"
+    )
     ResponsibleCoworkerId: int | None = None
     Number: str | None = None
     TypeId: int | None = None
@@ -363,7 +373,9 @@ class CreateDocumentDto(BaseModel):
     DatePictureTaken: datetime | None = None
     ShowInApp: bool | None = None
     OfflineInApp: bool | None = None
-    Status_: DocumentStatus | None = Field(None, alias="Status", serialization_alias="Status")
+    Status_: DocumentStatus | None = Field(
+        None, alias="Status", serialization_alias="Status"
+    )
     PublicFromDate: date | None = None
     PublicToDate: date | None = None
     ClassificationId: int | None = None
@@ -381,7 +393,9 @@ class CreateDocumentDto(BaseModel):
     ReviewCoworkerIds: list[int] | None = None
     CoAuthorCoworkerIds: list[int] | None = None
     ControllerCoworkerId: int | None = None
-    OnDuplicateFile_: OnDuplicateFile | None = Field(None, alias="OnDuplicateFile", serialization_alias="OnDuplicateFile")
+    OnDuplicateFile_: OnDuplicateFile | None = Field(
+        None, alias="OnDuplicateFile", serialization_alias="OnDuplicateFile"
+    )
 
 
 class CreatedDocumentDto(BaseModel):
@@ -412,7 +426,9 @@ class CreateDocumentWithLinkDto(BaseModel):
     DocumentGuid: str | None = None
     VersionGuid: str | None = None
     Description: str | None = None
-    DocumentType_: DocumentType | None = Field(None, alias="DocumentType", serialization_alias="DocumentType")
+    DocumentType_: DocumentType | None = Field(
+        None, alias="DocumentType", serialization_alias="DocumentType"
+    )
     ResponsibleCoworkerId: int | None = None
     Number: str | None = None
     TypeId: int | None = None
@@ -430,7 +446,9 @@ class CreateDocumentWithLinkDto(BaseModel):
     DatePictureTaken: datetime | None = None
     ShowInApp: bool | None = None
     OfflineInApp: bool | None = None
-    Status_: DocumentStatus | None = Field(None, alias="Status", serialization_alias="Status")
+    Status_: DocumentStatus | None = Field(
+        None, alias="Status", serialization_alias="Status"
+    )
     PublicFromDate: date | None = None
     PublicToDate: date | None = None
     ClassificationId: int | None = None
@@ -448,7 +466,9 @@ class CreateDocumentWithLinkDto(BaseModel):
     ReviewCoworkerIds: list[int] | None = None
     CoAuthorCoworkerIds: list[int] | None = None
     ControllerCoworkerId: int | None = None
-    OnDuplicateFile_: OnDuplicateFile | None = Field(None, alias="OnDuplicateFile", serialization_alias="OnDuplicateFile")
+    OnDuplicateFile_: OnDuplicateFile | None = Field(
+        None, alias="OnDuplicateFile", serialization_alias="OnDuplicateFile"
+    )
 
 
 class CreatedDocumentWithLinkDto(BaseModel):

@@ -58,7 +58,9 @@ class Client:
 
     # -- HTTP verbs ----------------------------------------------------------
 
-    def get(self, resource: str, entity_id: int, *, query_params: dict | None = None) -> dict | None:
+    def get(
+        self, resource: str, entity_id: int, *, query_params: dict | None = None
+    ) -> dict | None:
         """GET a single entity by ID. Returns None on 404."""
         url = self._build_url(f"{self.api_url}{resource}({entity_id})", query_params)
         response = requests.get(url, headers=self.headers)
@@ -66,7 +68,13 @@ class Client:
             return None
         return response.json()
 
-    def list(self, resource: str, *, select: list[str] | None = None, query_params: dict | None = None) -> list[dict]:
+    def list(
+        self,
+        resource: str,
+        *,
+        select: list[str] | None = None,
+        query_params: dict | None = None,
+    ) -> list[dict]:
         """GET all entities, automatically following pagination."""
         if query_params is None:
             query_params = {}
@@ -130,13 +138,16 @@ class Client:
         result = requests.post(url, json=post_body)
         if result.status_code != 200:
             raise LandaxAuthException(
-                "Landax returned non-200 response when getting OAuth token. Body: " + str(result.content)
+                "Landax returned non-200 response when getting OAuth token. Body: "
+                + str(result.content)
             )
 
         response_data = result.json()
 
         if "access_token" not in response_data:
-            raise LandaxAuthException("Landax response was non-json. Body: " + str(result.content))
+            raise LandaxAuthException(
+                "Landax response was non-json. Body: " + str(result.content)
+            )
 
         return response_data["access_token"]
 
@@ -149,6 +160,7 @@ class Client:
 
 def _load_v32(client: Client):
     from .v32 import ClientV32
+
     return ClientV32(client)
 
 

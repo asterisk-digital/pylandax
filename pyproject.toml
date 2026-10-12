@@ -28,11 +28,16 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Only collect files named test_*.py; excludes live integration modules.
+python_files = ["test_*.py"]
 
 [tool.tox]
+requires = ["tox>=4.21"]
 env_list = ["py313", "py314"]
 
 [tool.tox.env_run_base]
+description = "Run tests with pytest"
+package = "editable"
 dependency_groups = ["dev"]
 commands = [["pytest"]]
 

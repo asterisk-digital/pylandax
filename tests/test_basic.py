@@ -1,5 +1,8 @@
 import json
 from pathlib import Path
+from unittest.mock import patch, Mock
+
+import pytest
 
 import pylandax
 
@@ -11,18 +14,20 @@ def test_basic():
     with open(confpath) as file:
         conf = json.loads(file.read())["landax"]
 
-    try:
-        pylandax.Client(
-            url=conf["url"],
-            version=conf["version"],
-            username=conf["username"],
-            password=conf["password"],
-            client_id=conf["client_id"],
-            client_secret=conf["client_secret"],
-        )
-    # Since the URL is bogus, this is what we expect
-    except pylandax.LandaxAuthException:
-        pass
+    mock_response = Mock()
+    mock_response.status_code = 401
+    mock_response.content = b'{"error": "unauthorized"}'
+
+    with patch("pylandax.client.requests.post", return_value=mock_response):
+        with pytest.raises(pylandax.LandaxAuthException):
+            pylandax.Client(
+                url=conf["url"],
+                version=conf["version"],
+                username=conf["username"],
+                password=conf["password"],
+                client_id=conf["client_id"],
+                client_secret=conf["client_secret"],
+            )
 
 
 def test_build_url():

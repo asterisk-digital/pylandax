@@ -8,7 +8,13 @@ from typing import TYPE_CHECKING
 import requests as req
 
 from ..exceptions import LandaxDataException
-from .models import CreateDocumentDto, CreateDocumentWithLinkDto, CreatedDocumentDto, CreatedDocumentWithLinkDto, Document
+from .models import (
+    CreateDocumentDto,
+    CreateDocumentWithLinkDto,
+    CreatedDocumentDto,
+    CreatedDocumentWithLinkDto,
+    Document,
+)
 
 if TYPE_CHECKING:
     from ..client import Client
@@ -20,7 +26,9 @@ class DocumentsAPI:
     def __init__(self, client: Client) -> None:
         self._client = client
 
-    def get_all(self, query_params: dict | None = None, select: list[str] | None = None) -> list[Document]:
+    def get_all(
+        self, query_params: dict | None = None, select: list[str] | None = None
+    ) -> list[Document]:
         raw = self._client.list("Documents", select=select, query_params=query_params)
         return [Document.model_validate(item) for item in raw]
 
@@ -70,7 +78,10 @@ class DocumentsAPI:
     ) -> CreatedDocumentDto:
         """Upload a new document via Documents/CreateDocument (multipart)."""
         files = {
-            "document": (None, json.dumps(document.model_dump(by_alias=True, exclude_none=True))),
+            "document": (
+                None,
+                json.dumps(document.model_dump(by_alias=True, exclude_none=True)),
+            ),
             "fileData": (filename, filedata),
         }
         url = self._client.api_url + "Documents/CreateDocument"
@@ -86,7 +97,10 @@ class DocumentsAPI:
     ) -> CreatedDocumentWithLinkDto:
         """Upload a document linked to a model record via Documents/CreateDocumentWithLink."""
         files = {
-            "document": (None, json.dumps(document.model_dump(by_alias=True, exclude_none=True))),
+            "document": (
+                None,
+                json.dumps(document.model_dump(by_alias=True, exclude_none=True)),
+            ),
             "fileData": (filename, filedata),
         }
         url = self._client.api_url + "Documents/CreateDocumentWithLink"
