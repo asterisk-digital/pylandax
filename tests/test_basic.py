@@ -1,4 +1,3 @@
-import os
 import json
 from pathlib import Path
 from unittest.mock import patch, Mock
@@ -7,7 +6,7 @@ import pytest
 
 import pylandax
 
-script_dir = Path(os.path.dirname(os.path.realpath(__file__)))
+script_dir = Path(__file__).parent
 
 
 def test_basic():
@@ -15,23 +14,28 @@ def test_basic():
     with open(confpath) as file:
         conf = json.loads(file.read())["landax"]
 
-    # Mock the OAuth request so the test never hits the network. A non-200
-    # response is what we expect the client to raise on.
     mock_response = Mock()
     mock_response.status_code = 401
     mock_response.content = b'{"error": "unauthorized"}'
 
     with patch("pylandax.client.requests.post", return_value=mock_response):
         with pytest.raises(pylandax.LandaxAuthException):
-            pylandax.Client(conf["url"], conf["credentials"])
+            pylandax.Client(
+                url=conf["url"],
+                version=conf["version"],
+                username=conf["username"],
+                password=conf["password"],
+                client_id=conf["client_id"],
+                client_secret=conf["client_secret"],
+            )
 
 
-def test_generate_url():
+def test_build_url():
     base_url = "https://test.landax.com"
     params = {"$test": "test", "$test2": "test2"}
 
-    result = pylandax.Client.generate_url(base_url, params)
+    result = pylandax.Client._build_url(base_url, params)
     assert result == "https://test.landax.com?%24test=test&%24test2=test2"
 
-    result2 = pylandax.Client.generate_url(base_url, {})
+    result2 = pylandax.Client._build_url(base_url, {})
     assert result2 == "https://test.landax.com"
