@@ -153,6 +153,12 @@ class Client:
 
     def request_raw(self, url: str) -> requests.Response:
         response = requests.get(url, headers=self.headers)
+        # Callers read response.json()["value"]; on a non-2xx the body has no
+        # "value" key, so surface the status instead of a bare KeyError.
+        if not response.ok:
+            raise LandaxDataException(
+                f"GET {url} returned {response.status_code}: {response.text[:500]}"
+            )
         return response
 
     def get_documents(self, folder_id: int) -> list[dict]:
